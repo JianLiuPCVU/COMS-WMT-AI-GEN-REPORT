@@ -1,6 +1,5 @@
 # Portable Report Skill v2 (public release candidate)
 
-**Not approved for public distribution until company review.** This edition focuses on zero-setup report generation by AI tools. Unlike the earlier generic edition, it provides a fully specified, experimentally verified SDK query pattern, field catalog, and real-code example, **without** publishing internal backend URLs, tokens or customer data.
 
 ## AI entry point
 `SKILL.md` → `references/query-contracts.md`, `references/field-catalog.md`, `references/report-requirements.md` → `examples/brand-advertising-efficiency.json`.
