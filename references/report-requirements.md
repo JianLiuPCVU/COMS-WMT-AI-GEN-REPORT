@@ -13,3 +13,10 @@ Allowed user controls are meaningful domain interactions, such as date range, br
 SDK specs in `query-contracts.md` are **developer-side** inputs. The user never needs to see or edit them. Prefer simple, conventional UI, legible labels, horizontal responsive layout and visible date axes/tooltips.
 
 A validator's success only checks basic compatibility, not business accuracy, CORS, permissions, dynamic code safety or comprehensive datasets.
+
+## Additional acceptance requirements for report updates
+
+- Source report JSON supplied and read in full; preserve same stable `id`.
+- Preserve all existing features unless explicitly changed, including filters and metric scope.
+- Keep legacy `version`/`schemaVersion` separate from `reportVersion`.
+- Output complete updated JSON; summarize the diff, tests and any unverified behavior.

@@ -17,7 +17,7 @@ Source URL: https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/SKIL
 name: report-development
 description: Produce a complete, immediately runnable report JSON for a compatible reportAPI host. Use verified query contracts, fieldName identifiers, honest aggregation and the bundled validator; never push API plumbing or field mapping to end users.
 ---
-# Portable Report Development, v2 candidate
+# Portable Report Development, v3 candidate (creation and iteration)
 
 ## Non-negotiable acceptance test
 Create **one self-contained, importable JSON** report that opens and queries without asking its end user to paste request JSON, map API field names, choose SDK methods, or supply tokens. Normal *business filters* (date, brand, grouping) are welcome. Never confuse `showName` (display label) with `fieldName` (machine identifier).
@@ -28,17 +28,23 @@ Read in order:
 3. `references/field-catalog.md` and `references/quality-rules.md` for approved fields, semantics, completeness and nulls.
 4. `examples/brand-advertising-efficiency.json` for an actual, complete report; adapt it rather than constructing request plumbing from scratch.
 5. `references/report-requirements.md` for the user-facing release gate.
+6. **For editing an existing report**, `references/report-iteration.md` for identity, versioning, regression and full-output rules.
+
+## Choose the task mode first
+- **CREATE:** No original report supplied. Generate a new stable `id`, a complete importable JSON object, `schemaVersion: 1`, and `reportVersion: "1.0.0"`. For this experimental runtime, keep the legacy `version` field at the already supported numeric value (typically `2` for SDK-enabled reports), never use it for the report revision.
+- **UPDATE:** The user supplies an existing report JSON. **Treat that JSON as the baseline**. Keep its `id` byte-for-byte unchanged, preserve `schemaVersion` and legacy `version`, increment `reportVersion` (SemVer), and return the **whole JSON package**, not a patch. Preserve unrequested behavior, data selection, error states, style intent and permissions unless a new feature requires a documented permission. Read `references/report-iteration.md` before editing.
+- **RESTORE:** Do not silently generate a new higher-version report just to roll back; use the host's History/Restore feature when available.
 
 ## Procedure
 1. Map requested measures and dimensions to verified `fieldName` identifiers in the approved catalog. If the required field is absent, use host metadata discovery **inside the report**, or explicitly state it cannot be completed: do **not** show users a technical configuration form as a fallback.
-2. Implement a full report package with `id,name,version,permissions,html,css,js` in v0.3-compatible JSON. Include default dates and controls usable by the end user.
+2. Implement a full report package with `id,name,version,schemaVersion,reportVersion,permissions,html,css,js` in v0.4-compatible JSON. On UPDATE, preserve identity and pre-existing functions. Include default dates and controls usable by the end user.
 3. Use only `reportAPI` for data access. No raw URLs, auth tokens, page DOM access or unrelated network calls. Ensure declared `permissions` cover SDK calls.
 4. Use `queryTotal()` for scope-wide KPIs. For `queryTable()` multi-page stats, fetch all pages or label outputs clearly as page-only. ROAS = sum(sales)/sum(spend), never mean(row ROAS); null is not zero.
 5. Make loading/empty/error states obvious, prevent duplicate concurrent submissions and ensure dates and charts display clearly.
 6. Run `python scripts/validate_report.py YOUR_REPORT.json`; fix errors and investigate warnings. Verify in a permitted running host. Never assert live testing if it did not occur.
 
 ## Output
-Provide **the finished JSON file**, not an HTML draft or an input form to configure SDK internals. Summarize metric scope and any assumptions. No need to show code unless requested.
+Provide **the finished JSON file**, not an HTML draft or an input form to configure SDK internals. For updates, summarize what changed and what was deliberately preserved; verify identity and version fields against the supplied baseline. Summarize metric scope and any assumptions. No need to show code unless requested.
 
 ## Publication boundary
 This is a release candidate, not automatically authorized for public sharing. Verified product-facing identifiers and query shapes in these materials still need organizational disclosure review. Authentication, raw backend URLs and customer records are intentionally excluded. This Skill does not confer data-access permission or prove runtime code safe.
@@ -60,6 +66,10 @@ One JSON object (or an array of objects for batch import):
 Required: `id` (ASCII letters/digits/underscore/dash, 1-80 chars), `name` (1-140 chars), `html`, `css`, `js` strings. Optional: `version` (string or number), `permissions` (list of SDK capability strings). Keep serialized package under 500,000 characters. `html` is rendered beneath a host-provided root element; `css` styles the report; `js` is evaluated by the host with `root` and `reportAPI` bindings. Avoid global selectors, third-party scripts, and direct URL requests.
 
 The current compatibility profile is based on an experimental runtime and is **not an official public API guarantee**. Consumers should verify against their installed runtime. The `permissions` field documents requested capabilities; actual authorization is controlled by the host.
+
+## Versioned authoring profile (v0.4.0)
+
+For new reports, prefer `"schemaVersion":1, "version":2, "reportVersion":"1.0.0"`; `version` remains a legacy compatibility marker while `reportVersion` describes human-visible revisions. On edits, keep the original `id` and existing schema/legacy versions. Refer to `references/report-iteration.md`.
 
 ---
 
@@ -232,6 +242,68 @@ Allowed user controls are meaningful domain interactions, such as date range, br
 SDK specs in `query-contracts.md` are **developer-side** inputs. The user never needs to see or edit them. Prefer simple, conventional UI, legible labels, horizontal responsive layout and visible date axes/tooltips.
 
 A validator's success only checks basic compatibility, not business accuracy, CORS, permissions, dynamic code safety or comprehensive datasets.
+
+## Additional acceptance requirements for report updates
+
+- Source report JSON supplied and read in full; preserve same stable `id`.
+- Preserve all existing features unless explicitly changed, including filters and metric scope.
+- Keep legacy `version`/`schemaVersion` separate from `reportVersion`.
+- Output complete updated JSON; summarize the diff, tests and any unverified behavior.
+
+---
+
+## Source: references/report-iteration.md (Report iteration contract)
+
+Source URL: https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/references/report-iteration.md
+
+# Report iteration contract (Runtime v0.4.0 profile)
+
+This file governs **modification of an existing report**, rather than creating a new report from a prompt. The baseline is the **complete previously exported report JSON**, provided to the AI by the user; the public Skill does not have access to the user's locally saved reports.
+
+## Identity and versions
+
+| Property | Purpose | On UPDATE |
+|---|---|---|
+| `id` | Stable report identity and host lookup key | **Preserve exactly**. The host uses matching IDs to offer Update vs Save as new. |
+| `schemaVersion` | Package schema compatibility | Preserve the existing value, if present. The v0.4 validator supports `1`. |
+| `version` | Legacy host compatibility marker | **Preserve its value**, commonly numeric `2`. Never use it to indicate feature revisions. |
+| `reportVersion` | Human-readable SemVer revision | Increment, e.g. `1.0.0` → `1.1.0`. Introduce it when missing. |
+| `name` | Visible report title | Preserve unless user requests a rename. |
+
+When introducing `reportVersion` into a legacy report with only numeric `version`, select an initial SemVer baseline such as `1.0.0` and explain the choice. Never silently overwrite the original `id`. No implicit guarantee that the host enforces SemVer ordering: it currently prompts for an action when IDs match, and keeps a local history.
+
+Suggested SemVer convention: patch for fixes or polish; minor for additive backwards-compatible features; major for intentional breaking changes. The choice is report-author metadata and does not alter runtime SDK compatibility.
+
+## Edit workflow (must follow in order)
+
+1. Read the provided source JSON in full and validate/parse it. If only a screenshot is supplied, **request the exported JSON** or explicitly say accurate preservation cannot be guaranteed.
+2. Produce an inventory of its controls, fields, query methods, permissions, data semantics, loading/empty/error behavior, layout and chart behavior.
+3. Translate the user's change request into a bounded edit plan. Keep unrelated behavior unchanged; never invent new business metrics or change date/brand defaults without a request.
+4. Implement edits within `html`, `css` and `js`, while preserving working SDK contracts. Ensure new controls are wired to real state, and avoid accidental duplicate event handlers, queries, or altered query scope.
+5. Keep data access exclusively through `reportAPI`. Check new permissions against documented methods. Do not embed a token, raw backend URL, or auth logic.
+6. Validate the resulting JSON and compare it against the baseline with the bundled iteration check (command below). Fix errors. Review warnings, including lost controls, missing SDK methods and unexpected permission changes.
+7. Output the **entire updated JSON** as a downloadable/importable artifact. Describe changed features, retained features, new permissions and tests performed; distinguish static validation from live browser verification.
+
+## Validation
+
+```bash
+python scripts/validate_report.py edited.json
+python scripts/check_report_update.py previous.json edited.json
+```
+
+The second tool checks stable ID, schema/legacy version compatibility, reportVersion progression, and surfaces potential regressions. It is a **heuristic check**, not semantic equivalence proof. Never claim that static validation proves unchanged UX.
+
+## Runtime import lifecycle
+
+On matching `id`, the v0.4.0 host offers **Update current (save previous to History)**, **Save as new report**, or **Skip**. History retains up to 10 prior full snapshots for each ID. Updating a report is not the same as loading it into the page: the user may need to click Load again. Backup export may not include version history. Do not assume a host will always select Update or automatically deploy the new version.
+
+## Never do this
+
+- Generate a new `id` while describing the output as an update.
+- Change `version` to `"1.1.0"` when legacy numeric `2` is expected; use `reportVersion` instead.
+- Return only the edited `js` string, code fragments, unified diff, or an unimportable object.
+- Drop a pre-existing brand filter, table, KPI or tooltip as collateral damage.
+- Treat a changed test account's missing advertising data as a regression without verifying the data scope.
 
 ---
 

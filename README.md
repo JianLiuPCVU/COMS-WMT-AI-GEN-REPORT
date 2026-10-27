@@ -1,20 +1,10 @@
-# Portable Report Skill v2 (public release candidate)
+# Portable Report Skill v3: Creation + Iteration (publication review candidate)
 
+For URL-based AI readers, share the full [AI-CONTEXT.md](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/AI-CONTEXT.md). For Agent Skills installations, use `SKILL.md`.
 
-## AI entry point
-`SKILL.md` → `references/query-contracts.md`, `references/field-catalog.md`, `references/report-requirements.md` → `examples/brand-advertising-efficiency.json`.
+To update a report, give the AI **both** the online Skill URL and the **exported existing report JSON**, then describe the change. Keeping the report ID is essential to host versioning.
 
-Paste a repository URL into an AI with web-reading capabilities and ask it to read `SKILL.md` and linked files. Or install using a supported Agent Skills implementation. Reading a URL is not universal auto-install.
-
-## Quick local checks
-`python scripts/validate_report.py examples/brand-advertising-efficiency.json`
-
-## Repository update
-Upload the *contents* of this reviewed folder to the repository root, replacing existing versions. Keep existing company license and policies where applicable. Review PUBLICATION_REVIEW.md before exposing newly added field names and query semantics. Do not push any unapproved content merely because the repo is already Public.
-
-## Known limits
-This version documents one verified runtime profile (`OmniMetrics`) rather than every data source or grouping combination. It cannot guarantee the sample works in arbitrary hosts or that field-level metadata is safe to publish.
-
+Checks: `python scripts/validate_report.py updated.json` and `python scripts/check_report_update.py old.json updated.json`. Refresh AI-CONTEXT via `python scripts/generate_ai_context.py` after changing source files.
 
 ## One-link AI access (web-reading models)
 

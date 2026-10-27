@@ -18,6 +18,7 @@ This file combines the Skill, required reference docs and complete working JSON 
 - [Full query contracts](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/references/query-contracts.md) (`references/query-contracts.md`)
 - [Verified field catalog](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/references/field-catalog.md) (`references/field-catalog.md`)
 - [Quality rules](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/references/quality-rules.md) (`references/quality-rules.md`)
+- [Report iteration contract](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/references/report-iteration.md) (`references/report-iteration.md`)
 - [Ready-to-run acceptance rules](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/references/report-requirements.md) (`references/report-requirements.md`)
 - [Working report example](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/examples/brand-advertising-efficiency.json) (`examples/brand-advertising-efficiency.json`)
 - [Metadata discovery example](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/examples/dataset-discovery.json) (`examples/dataset-discovery.json`)
@@ -33,3 +34,7 @@ For compatible tools, `SKILL.md` plus the adjacent `references/`, `examples/`, a
 ## Publication note
 
 **Review candidate only.** The v2 references include implementation-facing query field names and schemas. Obtain company approval before publishing them on a Public repository. Do not publish credentials or real customer data.
+
+## Existing-report modification prompt
+
+> Read the complete context at https://raw.githubusercontent.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/main/AI-CONTEXT.md. I am attaching my existing complete report JSON. Modify it to [CHANGE REQUEST], retain the exact `id`, keep existing functions, increment `reportVersion`, keep the legacy `version` unchanged, and produce the complete revised JSON. Validate the update and disclose any tests you could not run.
