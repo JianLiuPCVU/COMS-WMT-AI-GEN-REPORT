@@ -38,6 +38,12 @@ def validate(path):
             elif method in permission_map and permission_map[method] not in (declared or []): errors.append(f'{label}: missing permission {permission_map[method]}')
         if 'queryTable(' in js and re.search(r'\b(sum|total|weighted|aggregate|reduce)\b',js,re.I) and 'hasNextPage' not in js and 'queryTotal(' not in js:
             warnings.append(f'{label}: possible page-only KPI; confirm coverage and label the scope')
+        # Detect technical setup forms that shift report-author work to the end user.
+        ui=(r.get('html','') or '') + ' ' + js
+        if re.search(r'(?:paste|enter|provide|fill in).{0,70}(?:queryTable|request JSON|query params|field mapping)',ui,re.I) or re.search(r'(?:queryTable parameters|host-approved contract|field mapping)',ui,re.I):
+            warnings.append(f'{label}: user-facing technical query or field mapping configuration detected; report may not be ready to run')
+        if re.search(r'<textarea',r.get('html',''),re.I) and re.search(r'(?:queryTable|JSON|parameters)',ui,re.I):
+            warnings.append(f'{label}: editable technical request JSON detected; prefer fully constructed SDK calls')
         if 'queryChart(' in js and 'xAxis' not in js:
             warnings.append(f'{label}: trend should use xAxis date labels')
     return errors,warnings

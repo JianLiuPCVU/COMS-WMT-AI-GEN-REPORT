@@ -1,27 +1,17 @@
-# Portable Report Skill (Public Edition, release candidate)
+# Portable Report Skill v2 (public release candidate)
 
-A model-neutral, Agent Skills-style instruction set for producing importable analytics report JSON for a compatible host-provided `reportAPI`.
+**Not approved for public distribution until company review.** This edition focuses on zero-setup report generation by AI tools. Unlike the earlier generic edition, it provides a fully specified, experimentally verified SDK query pattern, field catalog, and real-code example, **without** publishing internal backend URLs, tokens or customer data.
 
-## Read from an AI
-Give the AI the URL to this repository's `SKILL.md` and ask it to read referenced files. Reading a public URL is **not the same as installing a skill**; support depends on the AI product. Supported tools may install from a repository by their own procedure.
+## AI entry point
+`SKILL.md` → `references/query-contracts.md`, `references/field-catalog.md`, `references/report-requirements.md` → `examples/brand-advertising-efficiency.json`.
 
-Example prompt:
-> Read the SKILL.md and relevant references at https://github.com/OWNER/REPOSITORY/blob/main/SKILL.md . Create a report compatible with this contract. Use only approved dataset metadata, no guessed API fields. Provide an importable JSON and validation results.
+Paste a repository URL into an AI with web-reading capabilities and ask it to read `SKILL.md` and linked files. Or install using a supported Agent Skills implementation. Reading a URL is not universal auto-install.
 
-## Local static test
-```bash
-python scripts/validate_report.py examples/dataset-discovery.json
-```
+## Quick local checks
+`python scripts/validate_report.py examples/brand-advertising-efficiency.json`
 
-## Files
-- `SKILL.md` instructions
-- `references/` public contracts and correctness rules
-- `examples/dataset-discovery.json` synthetic, live metadata-driven sample; no real customer data
-- `scripts/validate_report.py` heuristic static validation
-- `PUBLICATION_REVIEW.md` authorization and content checklist
+## Repository update
+Upload the *contents* of this reviewed folder to the repository root, replacing existing versions. Keep existing company license and policies where applicable. Review PUBLICATION_REVIEW.md before exposing newly added field names and query semantics. Do not push any unapproved content merely because the repo is already Public.
 
-## Publishing and versioning
-Create a **new clean GitHub repository**, upload these files via the GitHub web interface only **after approval**, and tag approved releases (e.g. `v0.1.0-public`). Version in `SKILL.md` and the runtime compatibility profile independently of the repository tag. Do not upload the previous internal Skill package or original request dumps.
-
-## License
-No open-source license is included until the copyright holder chooses and approves one. **Public GitHub visibility by itself does not grant a license to reuse or redistribute.**
+## Known limits
+This version documents one verified runtime profile (`OmniMetrics`) rather than every data source or grouping combination. It cannot guarantee the sample works in arbitrary hosts or that field-level metadata is safe to publish.
