@@ -18,9 +18,11 @@ This file combines the Skill, required reference docs and complete working JSON 
 - [Full query contracts](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/references/query-contracts.md) (`references/query-contracts.md`)
 - [Verified field catalog](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/references/field-catalog.md) (`references/field-catalog.md`)
 - [Quality rules](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/references/quality-rules.md) (`references/quality-rules.md`)
+- [UI Kit v1.1 contract](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/references/report-ui-kit.md) (`references/report-ui-kit.md`)
 - [Report iteration contract](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/references/report-iteration.md) (`references/report-iteration.md`)
 - [Ready-to-run acceptance rules](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/references/report-requirements.md) (`references/report-requirements.md`)
 - [Working report example](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/examples/brand-advertising-efficiency.json) (`examples/brand-advertising-efficiency.json`)
+- [UI Kit complete example](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/examples/uikit-brand-sales.json) (`examples/uikit-brand-sales.json`)
 - [Metadata discovery example](https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/examples/dataset-discovery.json) (`examples/dataset-discovery.json`)
 
 ## Ready-to-copy AI request

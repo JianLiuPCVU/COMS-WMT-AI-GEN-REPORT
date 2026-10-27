@@ -17,7 +17,7 @@ Source URL: https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/SKIL
 name: report-development
 description: Produce a complete, immediately runnable report JSON for a compatible reportAPI host. Use verified query contracts, fieldName identifiers, honest aggregation and the bundled validator; never push API plumbing or field mapping to end users.
 ---
-# Portable Report Development, v3 candidate (creation and iteration)
+# Portable Report Development, v4 candidate (creation, iteration and UI Kit)
 
 ## Non-negotiable acceptance test
 Create **one self-contained, importable JSON** report that opens and queries without asking its end user to paste request JSON, map API field names, choose SDK methods, or supply tokens. Normal *business filters* (date, brand, grouping) are welcome. Never confuse `showName` (display label) with `fieldName` (machine identifier).
@@ -28,7 +28,8 @@ Read in order:
 3. `references/field-catalog.md` and `references/quality-rules.md` for approved fields, semantics, completeness and nulls.
 4. `examples/brand-advertising-efficiency.json` for an actual, complete report; adapt it rather than constructing request plumbing from scratch.
 5. `references/report-requirements.md` for the user-facing release gate.
-6. **For editing an existing report**, `references/report-iteration.md` for identity, versioning, regression and full-output rules.
+6. **For a v0.5.1+ UI Kit target**, read `references/report-ui-kit.md` and its complete working example `examples/uikit-brand-sales.json`. Do not use UI Kit on older hosts.
+7. **For editing an existing report**, `references/report-iteration.md` for identity, versioning, regression and full-output rules.
 
 ## Choose the task mode first
 - **CREATE:** No original report supplied. Generate a new stable `id`, a complete importable JSON object, `schemaVersion: 1`, and `reportVersion: "1.0.0"`. For this experimental runtime, keep the legacy `version` field at the already supported numeric value (typically `2` for SDK-enabled reports), never use it for the report revision.
@@ -38,8 +39,8 @@ Read in order:
 ## Procedure
 1. Map requested measures and dimensions to verified `fieldName` identifiers in the approved catalog. If the required field is absent, use host metadata discovery **inside the report**, or explicitly state it cannot be completed: do **not** show users a technical configuration form as a fallback.
 2. Implement a full report package with `id,name,version,schemaVersion,reportVersion,permissions,html,css,js` in v0.4-compatible JSON. On UPDATE, preserve identity and pre-existing functions. Include default dates and controls usable by the end user.
-3. Use only `reportAPI` for data access. No raw URLs, auth tokens, page DOM access or unrelated network calls. Ensure declared `permissions` cover SDK calls.
-4. Use `queryTotal()` for scope-wide KPIs. For `queryTable()` multi-page stats, fetch all pages or label outputs clearly as page-only. ROAS = sum(sales)/sum(spend), never mean(row ROAS); null is not zero.
+3. Prefer `reportUI.chart()` and `reportUI.table()` for visualizations when target runtime supports UI Kit 1.1; retain flexibility to use standalone HTML/CSS and SVG. Table is presentation-only with no built-in sorting/filtering/pagination. Use only `reportAPI` for data access. No raw URLs, auth tokens, page DOM access or unrelated network calls. Ensure declared `permissions` cover SDK calls.
+4. The UI Kit `dataBar` scales to supplied rows only, not to the total dataset; do not imply otherwise. Use `queryTotal()` for scope-wide KPIs. For `queryTable()` multi-page stats, fetch all pages or label outputs clearly as page-only. ROAS = sum(sales)/sum(spend), never mean(row ROAS); null is not zero.
 5. Make loading/empty/error states obvious, prevent duplicate concurrent submissions and ensure dates and charts display clearly.
 6. Run `python scripts/validate_report.py YOUR_REPORT.json`; fix errors and investigate warnings. Verify in a permitted running host. Never assert live testing if it did not occur.
 
@@ -250,6 +251,13 @@ A validator's success only checks basic compatibility, not business accuracy, CO
 - Keep legacy `version`/`schemaVersion` separate from `reportVersion`.
 - Output complete updated JSON; summarize the diff, tests and any unverified behavior.
 
+
+## UI Kit report acceptance (only when host supports UI Kit 1.1)
+- Charts and tables use the runtime-provided `reportUI`, not embedded third-party scripts or CDNs.
+- A native table never implies sorting, filtering or paging; business controls, if needed, must query the backend.
+- A visible incomplete-page warning is required whenever a result is partial and derived totals only cover those returned rows.
+- ECharts dependency state is surfaced when unavailable.
+
 ---
 
 ## Source: references/report-iteration.md (Report iteration contract)
@@ -304,6 +312,85 @@ On matching `id`, the v0.4.0 host offers **Update current (save previous to Hist
 - Return only the edited `js` string, code fragments, unified diff, or an unimportable object.
 - Drop a pre-existing brand filter, table, KPI or tooltip as collateral damage.
 - Treat a changed test account's missing advertising data as a regression without verifying the data scope.
+
+---
+
+## Source: references/report-ui-kit.md (Report UI Kit v1.1)
+
+Source URL: https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/references/report-ui-kit.md
+
+# Report UI Kit v1.1 contract (Custom Reports Lab extension v0.5.1)
+
+This is an **optional UI convenience layer** in the report sandbox. It does not change the `reportAPI` query contracts. In a compatible v0.5.1 host the report JS receives `root`, `reportAPI`, and `reportUI`. Before relying on UI Kit, target that host version; do not assume it is available on v0.4.0 and earlier. Preserve old report presentation on UPDATE unless specifically requested to migrate it.
+
+## Source-verified API
+
+- `reportUI.version` is `'1.1.0'`.
+- `reportUI.features`: `{echarts: boolean, nativeTable: true}`. ECharts must be installed locally in the extension `vendor` directory. If ECharts is absent, `chart()` throws.
+- `reportUI.chart(elementOrSelector, {type, data, x, y, horizontal?, rotateLabels?, smooth?, option?})`. `type` is `bar`, `line`, `area`, `pie` or `donut`. `data` is an array of records; `x` selects the category/label field; `y` can be one field name or an array of field names (multiple series for cartesian charts). `option` merges a supplied ECharts option object shallowly over defaults, so replacing a nested object requires providing the complete nested setting.
+- `reportUI.table(elementOrSelector, {data, columns, compact?, label?, emptyText?})` renders exactly the provided rows. `columns` can be field-name strings or objects `{field,title,format?,decimals?,visual?,align?,width?,visible?}`. `format`: `number`, `currency`, `percent`, `ratio`; `visual:'dataBar'` creates an inline bar normalized to the maximum **within the supplied rows**. Nulls show `—`. `percent` appends `%` without multiplying by 100; ensure source units are appropriate. Values are placed via `textContent`, not HTML.
+- `chart()` and `table()` return controllers with `.update(rows)` and `.dispose()`; `reportUI.dispose(elementOrSelector)` and `reportUI.disposeAll()` also exist. `chart().update(rows)` rebuilds that chart and disposes the old one; do not retain the earlier controller for later operations after updating.
+
+## AI authoring requirements
+
+1. Create `<div id="chart" class="cr-chart"></div>` and `<div id="table" class="cr-table"></div>` inside the package's `html`. The provided host stylesheet styles these classes. Use scoped selectors with `root.querySelector` for report-owned elements. Note that `reportUI` accepts CSS selectors and resolves them against the sandbox document; unique IDs are preferred.
+2. Query business data with `reportAPI`, then pass data rows into `reportUI`. UI Kit does not fetch data and does not implicitly grant permissions. Keep `permissions` appropriate to the SDK methods used.
+3. **No built-in table sorting, filtering or pagination**. If user requests these, create separate business controls and issue supported backend `reportAPI.queryTable()` calls. Do not sort only the first backend page and label it a global ranking.
+4. Scope KPI totals correctly. A table page is not a full population; use `queryTotal()` where appropriate, or label returned-row-only results explicitly. Never infer total row counts from `hasNextPage`.
+5. No reliance on Tabulator or Grid.js. Tabulator-specific options (`headerFilter`, `sorter`, `pagination`, custom `formatter` callbacks) are not implemented.
+6. Handle loading, empty/error states, date changes and chart/table redraw. For update of an existing report, keep its ID and all unrelated functionality unchanged. Validate the exported JSON before delivery.
+7. Do not insert ECharts scripts, vendor assets, remote CDN URLs, authentication tokens or raw API endpoints into a report JSON. The host owns the locally installed ECharts library and table renderer.
+
+## Ready-to-copy JavaScript pattern
+
+```js
+const $ = selector => root.querySelector(selector);
+async function refresh() {
+  const response = await reportAPI.queryTable({
+    /* Paste a complete request following references/query-contracts.md; no placeholders in delivered JSON */
+  });
+  const rows = response.list || [];
+  reportUI.chart($('#chart'), { type: 'bar', data: rows, x: 'brandName', y: 'adSalesAmount' });
+  reportUI.table($('#table'), { data: rows, columns: [
+    { field:'brandName', title:'Brand' },
+    { field:'adSalesAmount', title:'Ad Sales', format:'currency', visual:'dataBar' },
+    { field:'adRoas', title:'ROAS', format:'ratio' }
+  ] });
+}
+```
+
+The code above is a usage snippet, **not** a full importable report; use `examples/uikit-brand-sales.json` as the complete reference package. The sample's KPI explicitly covers returned rows rather than whole-population totals.
+
+## Runtime availability check
+
+If the target host does not provide `reportUI` or `reportUI.features.nativeTable`, do not generate a report that requires UI Kit. Ask for a compatible runtime or use the older plain HTML/SVG approach. For reports that require ECharts, check `reportUI.features.echarts` and display a clear diagnostic instead of silently failing.
+
+## Compatibility and performance
+
+Native table generates DOM for all rows passed and does not offer virtual scrolling. Fetch only the rows needed for the current display. Use host data paging at query level for large datasets. The present UI Kit profile has no backend-paged table adapter; do not invent one.
+
+---
+
+## Source: examples/uikit-brand-sales.json (Complete UI Kit report)
+
+Source URL: https://github.com/JianLiuPCVU/COMS-WMT-AI-GEN-REPORT/blob/main/examples/uikit-brand-sales.json
+
+```json
+{
+  "id": "uikit-brand-sales-skill-example",
+  "name": "Brand Performance · ECharts + Native Table",
+  "version": 2,
+  "reportVersion": "1.0.0",
+  "permissions": [
+    "table",
+    "brands"
+  ],
+  "html": "<div class='report'><h2>Brand Performance · UI Kit</h2><div class='filters'><label>Start <input id='start' type='date' value='2026-09-27'></label><label>End <input id='end' type='date' value='2026-10-24'></label><button id='run'>Run</button></div><p id='state'></p><div class='cr-grid'><section class='cr-card'><span class='cr-muted'>Ad Sales</span><div id='total' class='cr-kpi'>—</div></section><section class='cr-card'><span class='cr-muted'>Brands returned</span><div id='count' class='cr-kpi'>—</div></section></div><h3>Ad Sales by Brand</h3><div id='chart' class='cr-chart'></div><h3>Data Table</h3><div id='table' class='cr-table'></div></div>",
+  "css": ".report{padding:24px;max-width:100%;box-sizing:border-box;font:14px system-ui;color:#1e293b}.filters{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin:16px 0}.filters label{display:grid;gap:4px}.filters input{padding:8px;border:1px solid #cbd5e1;border-radius:6px}.filters button{background:#2563eb;color:white;border:0;border-radius:6px;padding:10px 20px}#state{color:#64748b}",
+  "js": "const $=s=>root.querySelector(s);const q={dataSet:'OmniMetrics',dateDimension:'Period',aggregations:['brandName'],groupBys:[],filters:{customBrandName:[],customCategory:[],brandName:[],category:[],promotionStatus:[],currentBadges:[],labels:[],historyLabels:[]},columnGroupTypes:['Advertising','ChannelSales','Inventory','OnlineOrganicSales','OnlineSales','OverallSales','StoreSales'],uniqueTimeZone:8};async function run(){const b=$('#run');b.disabled=true;$('#state').textContent='Loading';try{const result=await reportAPI.queryTable({...q,startDate:$('#start').value,endDate:$('#end').value,pageNum:1,pageSize:100,orderBys:{orderBy:'adSalesAmount',orderType:'descending'}});const rows=result.list||[];$('#total').textContent=rows.reduce((s,r)=>s+(Number(r.adSalesAmount)||0),0).toLocaleString('en-US',{maximumFractionDigits:2});$('#count').textContent=rows.length;$('#state').textContent=(result.hasNextPage?'Partial page; KPI covers returned rows only. ':'')+'Loaded '+rows.length+' brands';reportUI.chart('#chart',{type:'bar',data:rows,x:'brandName',y:'adSalesAmount',rotateLabels:35});reportUI.table('#table',{data:rows,columns:[{title:'Brand',field:'brandName'},{title:'Ad Sales',field:'adSalesAmount',format:'currency',visual:'dataBar'},{title:'Ad Spend',field:'adSpend',format:'currency'},{title:'ROAS',field:'adRoas',format:'ratio'}]});}catch(e){$('#state').textContent='Error: '+e.message}finally{b.disabled=false}}$('#run').addEventListener('click',run);run();",
+  "schemaVersion": 1
+}
+```
 
 ---
 

@@ -20,3 +20,10 @@ A validator's success only checks basic compatibility, not business accuracy, CO
 - Preserve all existing features unless explicitly changed, including filters and metric scope.
 - Keep legacy `version`/`schemaVersion` separate from `reportVersion`.
 - Output complete updated JSON; summarize the diff, tests and any unverified behavior.
+
+
+## UI Kit report acceptance (only when host supports UI Kit 1.1)
+- Charts and tables use the runtime-provided `reportUI`, not embedded third-party scripts or CDNs.
+- A native table never implies sorting, filtering or paging; business controls, if needed, must query the backend.
+- A visible incomplete-page warning is required whenever a result is partial and derived totals only cover those returned rows.
+- ECharts dependency state is surfaced when unavailable.

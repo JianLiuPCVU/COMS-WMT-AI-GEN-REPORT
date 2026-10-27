@@ -1,0 +1,14 @@
+{
+  "id": "uikit-brand-sales-skill-example",
+  "name": "Brand Performance · ECharts + Native Table",
+  "version": 2,
+  "reportVersion": "1.0.0",
+  "permissions": [
+    "table",
+    "brands"
+  ],
+  "html": "<div class='report'><h2>Brand Performance · UI Kit</h2><div class='filters'><label>Start <input id='start' type='date' value='2026-09-27'></label><label>End <input id='end' type='date' value='2026-10-24'></label><button id='run'>Run</button></div><p id='state'></p><div class='cr-grid'><section class='cr-card'><span class='cr-muted'>Ad Sales</span><div id='total' class='cr-kpi'>—</div></section><section class='cr-card'><span class='cr-muted'>Brands returned</span><div id='count' class='cr-kpi'>—</div></section></div><h3>Ad Sales by Brand</h3><div id='chart' class='cr-chart'></div><h3>Data Table</h3><div id='table' class='cr-table'></div></div>",
+  "css": ".report{padding:24px;max-width:100%;box-sizing:border-box;font:14px system-ui;color:#1e293b}.filters{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin:16px 0}.filters label{display:grid;gap:4px}.filters input{padding:8px;border:1px solid #cbd5e1;border-radius:6px}.filters button{background:#2563eb;color:white;border:0;border-radius:6px;padding:10px 20px}#state{color:#64748b}",
+  "js": "const $=s=>root.querySelector(s);const q={dataSet:'OmniMetrics',dateDimension:'Period',aggregations:['brandName'],groupBys:[],filters:{customBrandName:[],customCategory:[],brandName:[],category:[],promotionStatus:[],currentBadges:[],labels:[],historyLabels:[]},columnGroupTypes:['Advertising','ChannelSales','Inventory','OnlineOrganicSales','OnlineSales','OverallSales','StoreSales'],uniqueTimeZone:8};async function run(){const b=$('#run');b.disabled=true;$('#state').textContent='Loading';try{const result=await reportAPI.queryTable({...q,startDate:$('#start').value,endDate:$('#end').value,pageNum:1,pageSize:100,orderBys:{orderBy:'adSalesAmount',orderType:'descending'}});const rows=result.list||[];$('#total').textContent=rows.reduce((s,r)=>s+(Number(r.adSalesAmount)||0),0).toLocaleString('en-US',{maximumFractionDigits:2});$('#count').textContent=rows.length;$('#state').textContent=(result.hasNextPage?'Partial page; KPI covers returned rows only. ':'')+'Loaded '+rows.length+' brands';reportUI.chart('#chart',{type:'bar',data:rows,x:'brandName',y:'adSalesAmount',rotateLabels:35});reportUI.table('#table',{data:rows,columns:[{title:'Brand',field:'brandName'},{title:'Ad Sales',field:'adSalesAmount',format:'currency',visual:'dataBar'},{title:'Ad Spend',field:'adSpend',format:'currency'},{title:'ROAS',field:'adRoas',format:'ratio'}]});}catch(e){$('#state').textContent='Error: '+e.message}finally{b.disabled=false}}$('#run').addEventListener('click',run);run();",
+  "schemaVersion": 1
+}
