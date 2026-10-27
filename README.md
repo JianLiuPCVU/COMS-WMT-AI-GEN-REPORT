@@ -2,8 +2,6 @@
 
 A model-neutral, Agent Skills-style instruction set for producing importable analytics report JSON for a compatible host-provided `reportAPI`.
 
-**Status: NOT APPROVED FOR PUBLICATION.** This directory is a **review candidate**. Publish only after the owner confirms company authorization, project branding, report SDK redistribution rights, and code license.
-
 ## Read from an AI
 Give the AI the URL to this repository's `SKILL.md` and ask it to read referenced files. Reading a public URL is **not the same as installing a skill**; support depends on the AI product. Supported tools may install from a repository by their own procedure.
 
